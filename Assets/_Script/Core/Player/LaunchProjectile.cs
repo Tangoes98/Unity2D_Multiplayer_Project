@@ -13,11 +13,14 @@ public class LaunchProjectile : NetworkBehaviour
     [SerializeField] GameObject _clientProjectile;
     [SerializeField] GameObject _muzzleFlash;
     [SerializeField] Collider2D _playerCollider;
+    [SerializeField] CoinCollector _coinCollector;
 
     [Header("Settings")]
     [SerializeField] float _projectileSpeed;
     [SerializeField] float _fireCD;
     [SerializeField] float _muzzleFlashDuration;
+    [SerializeField] int _costToFire;
+
     bool _shouldFire;
     float _muzzleFlashTimer;
     float _fireTimer;
@@ -39,10 +42,12 @@ public class LaunchProjectile : NetworkBehaviour
 
     private void Update()
     {
+        if (!IsOwner) return;
+
         MuzzleFlashTimerCheck();
         if (!CanPlayerLaunchProjectile()) return;
+        if (_coinCollector.TotalCoins.Value < _costToFire) return;
 
-        if (!IsOwner) return;
         if (!_shouldFire) return;
 
         SpawnsServerProjectile_ServerRpc(_spawnPosition.transform.position, _spawnPosition.up);
@@ -59,6 +64,7 @@ public class LaunchProjectile : NetworkBehaviour
     [ServerRpc]
     void SpawnsServerProjectile_ServerRpc(Vector3 spawnPos, Vector3 direction)
     {
+        _coinCollector.SpendCoin(_costToFire);
         SpawnProjectile(_serverProjectile, spawnPos, direction);
         SpawnClientProjectile_ClientRpc(spawnPos, direction);
     }
@@ -81,6 +87,11 @@ public class LaunchProjectile : NetworkBehaviour
         projectileInstance.transform.up = direction;
 
         Physics2D.IgnoreCollision(_playerCollider, projectileInstance.GetComponent<Collider2D>());
+
+        if (projectileInstance.TryGetComponent<DealDamage>(out DealDamage dealDamage))
+        {
+            dealDamage.SetOwner(this.OwnerClientId);
+        }
 
         if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
         {
