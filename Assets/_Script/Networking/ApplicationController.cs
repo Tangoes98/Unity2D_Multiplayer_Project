@@ -23,11 +23,11 @@ public class ApplicationController : MonoBehaviour
         }
         else
         {
-            ClientSingleton clientSingleton = Instantiate(_clientPrefab);
-            bool isAuthenticated = await clientSingleton.CreateClient();
-
             HostSingleton hostSingleton = Instantiate(_hostPrefab);
             hostSingleton.CreateHost();
+
+            ClientSingleton clientSingleton = Instantiate(_clientPrefab);
+            bool isAuthenticated = await clientSingleton.CreateClient();
 
             if(isAuthenticated)
             {

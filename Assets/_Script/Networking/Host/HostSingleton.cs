@@ -24,7 +24,7 @@ public class HostSingleton : MonoBehaviour
         }
     }
 
-    HostGameManager _gameManager;
+    public HostGameManager GameManager { get; private set; }
 
     void Start()
     {
@@ -33,6 +33,6 @@ public class HostSingleton : MonoBehaviour
 
     public void CreateHost()
     {
-        _gameManager = new();
+        GameManager = new();
     }
 }
